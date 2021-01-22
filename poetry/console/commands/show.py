@@ -33,9 +33,9 @@ lists all packages available."""
     colors = ["cyan", "yellow", "green", "magenta", "blue"]
 
     def handle(self):
+        from cleo.io.null_io import NullIO
         from clikit.utils.terminal import Terminal
 
-        from poetry.io.null_io import NullIO
         from poetry.puzzle.solver import Solver
         from poetry.repositories.installed_repository import InstalledRepository
         from poetry.repositories.pool import Pool

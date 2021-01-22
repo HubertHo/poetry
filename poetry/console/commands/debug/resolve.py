@@ -6,7 +6,7 @@ from ..init import InitCommand
 
 class DebugResolveCommand(InitCommand):
 
-    name = "resolve"
+    name = "debug resolve"
     description = "Debugs dependency resolution."
 
     arguments = [
@@ -28,9 +28,10 @@ class DebugResolveCommand(InitCommand):
     loggers = ["poetry.repositories.pypi_repository", "poetry.inspection.info"]
 
     def handle(self):
+        from cleo.io.null_io import NullIO
+
         from poetry.core.packages.project_package import ProjectPackage
         from poetry.factory import Factory
-        from poetry.io.null_io import NullIO
         from poetry.puzzle import Solver
         from poetry.repositories.pool import Pool
         from poetry.repositories.repository import Repository

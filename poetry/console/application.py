@@ -1,17 +1,23 @@
-import sys
+from typing import List
 
 from cleo import Application as BaseApplication
+from cleo import Command
 
 from poetry.__version__ import __version__
 
 from .commands.about import AboutCommand
 from .commands.add import AddCommand
 from .commands.build import BuildCommand
-from .commands.cache.cache import CacheCommand
+from .commands.cache.clear import CacheClearCommand
+from .commands.cache.list import CacheListCommand
 from .commands.check import CheckCommand
 from .commands.config import ConfigCommand
-from .commands.debug.debug import DebugCommand
-from .commands.env.env import EnvCommand
+from .commands.debug.info import DebugInfoCommand
+from .commands.debug.resolve import DebugResolveCommand
+from .commands.env.info import EnvInfoCommand
+from .commands.env.list import EnvListCommand
+from .commands.env.remove import EnvRemoveCommand
+from .commands.env.use import EnvUseCommand
 from .commands.export import ExportCommand
 from .commands.init import InitCommand
 from .commands.install import InstallCommand
@@ -21,60 +27,23 @@ from .commands.publish import PublishCommand
 from .commands.remove import RemoveCommand
 from .commands.run import RunCommand
 from .commands.search import SearchCommand
-from .commands.self.self import SelfCommand
+from .commands.self.update import SelfUpdateCommand
 from .commands.shell import ShellCommand
 from .commands.show import ShowCommand
 from .commands.update import UpdateCommand
 from .commands.version import VersionCommand
-from .config import ApplicationConfig
 
 
 class Application(BaseApplication):
     def __init__(self):
-        super(Application, self).__init__(
-            "poetry", __version__, config=ApplicationConfig("poetry", __version__)
-        )
+        super(Application, self).__init__("poetry", __version__)
 
         self._poetry = None
-
-        for command in self.get_default_commands():
-            self.add(command)
-
-        if sys.version_info[:2] < (3, 6):
-            python_version = "<c1>{}</c1>".format(
-                ".".join(str(v) for v in sys.version_info[:2])
-            )
-            poetry_feature_release = "<c1>1.2</c1>"
-            message = (
-                "\n"
-                "Python {} will no longer be supported "
-                "in the next feature release of Poetry ({}).\n"
-                "You should consider updating your Python version to a supported one.\n\n"
-                ""
-                "Note that you will still be able to manage Python {} projects "
-                "by using the <c1>env</c1> command.\n"
-                "See <fg=blue>https://python-poetry.org/docs/managing-environments/</> "
-                "for more information."
-            ).format(python_version, poetry_feature_release, python_version)
-            self._preliminary_io.error_line("<fg=yellow>{}</>\n".format(message))
 
     @property
-    def poetry(self):
-        from pathlib import Path
+    def default_commands(self) -> List[Command]:
+        default_commands = super().default_commands
 
-        from poetry.factory import Factory
-
-        if self._poetry is not None:
-            return self._poetry
-
-        self._poetry = Factory().create_poetry(Path.cwd())
-
-        return self._poetry
-
-    def reset_poetry(self):  # type: () -> None
-        self._poetry = None
-
-    def get_default_commands(self):  # type: () -> list
         commands = [
             AboutCommand(),
             AddCommand(),
@@ -97,18 +66,42 @@ class Application(BaseApplication):
         ]
 
         # Cache commands
-        commands += [CacheCommand()]
+        commands += [
+            CacheClearCommand(),
+            CacheListCommand(),
+        ]
 
-        # Debug command
-        commands += [DebugCommand()]
+        # Debug commands
+        commands += [DebugInfoCommand(), DebugResolveCommand()]
 
-        # Env command
-        commands += [EnvCommand()]
+        # Env commands
+        commands += [
+            EnvInfoCommand(),
+            EnvListCommand(),
+            EnvRemoveCommand(),
+            EnvUseCommand(),
+        ]
 
         # Self commands
-        commands += [SelfCommand()]
+        commands += [SelfUpdateCommand()]
 
-        return commands
+        return default_commands + commands
+
+    @property
+    def poetry(self):
+        from pathlib import Path
+
+        from poetry.factory import Factory
+
+        if self._poetry is not None:
+            return self._poetry
+
+        self._poetry = Factory().create_poetry(Path.cwd())
+
+        return self._poetry
+
+    def reset_poetry(self):  # type: () -> None
+        self._poetry = None
 
 
 if __name__ == "__main__":
